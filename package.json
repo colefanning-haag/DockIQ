@@ -1,0 +1,13 @@
+{
+  "name": "dockiq",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "collect": "node collect.mjs",
+    "start": "node collect.mjs"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1"
+  }
+}
