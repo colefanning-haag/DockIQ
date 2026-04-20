@@ -1,0 +1,4 @@
+node_modules/
+dockiq.db
+dockiq.db-shm
+dockiq.db-wal
