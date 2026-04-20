@@ -1,9 +1,11 @@
 import Database from "better-sqlite3";
+import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const DB_PATH = join(__dirname, "dockiq.db");
+const DB_PATH = process.env.DB_PATH ?? join(__dirname, "dockiq.db");
+mkdirSync(dirname(DB_PATH), { recursive: true });
 
 const STATION_INFORMATION_URL =
   "https://gbfs.lyft.com/gbfs/1.1/bkn/en/station_information.json";
