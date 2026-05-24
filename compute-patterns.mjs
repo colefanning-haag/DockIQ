@@ -2,6 +2,7 @@ import Database from "better-sqlite3";
 import { createClient } from "@supabase/supabase-js";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import ws from "ws";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DB_PATH = process.env.DB_PATH ?? join(__dirname, "dockiq.db");
@@ -37,7 +38,8 @@ async function upsertChunked(supabase, table, rows) {
 export async function computePatterns() {
   const supabase = createClient(
     process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_KEY
+    process.env.SUPABASE_SERVICE_KEY,
+    { realtime: { transport: ws } }
   );
 
   const db = new Database(DB_PATH, { readonly: true });
