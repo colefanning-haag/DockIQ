@@ -45,8 +45,9 @@ async function upsertChunked(supabaseUrl, supabaseKey, table, rows) {
 }
 
 export async function computePatterns() {
-  const supabaseUrl = process.env.SUPABASE_URL.replace(/\/$/, "");
-  const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+  const supabaseUrl = process.env.SUPABASE_URL.trim().replace(/\/$/, "");
+  const supabaseKey = process.env.SUPABASE_SERVICE_KEY.trim();
+  console.log(`[patterns] Supabase URL: ${supabaseUrl}`);
 
   const db = new Database(DB_PATH, { readonly: true });
 
