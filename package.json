@@ -8,6 +8,7 @@
     "start": "node collect.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.43.0",
     "better-sqlite3": "^11.8.1"
   }
 }

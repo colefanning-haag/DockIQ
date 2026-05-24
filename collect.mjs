@@ -156,6 +156,24 @@ async function main() {
   await runPoll();
   setInterval(runPoll, POLL_MS);
   console.log(`Polling every ${POLL_MS / 60000} minutes. Press Ctrl+C to stop.`);
+
+  // Run pattern computation if Supabase creds are present.
+  // Fires once 1 minute after startup (to let the first poll settle),
+  // then every 24 hours.
+  if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY) {
+    const { computePatterns } = await import("./compute-patterns.mjs");
+    const runPatterns = async () => {
+      try {
+        await computePatterns();
+      } catch (err) {
+        console.error("Pattern computation failed:", err);
+      }
+    };
+    setTimeout(() => {
+      runPatterns();
+      setInterval(runPatterns, 24 * 60 * 60 * 1000);
+    }, 60 * 1000);
+  }
 }
 
 main().catch((err) => {
