@@ -11,7 +11,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-COPY collect.mjs ./
+COPY collect.mjs compute-patterns.mjs ./
 
 ENV DB_PATH=/data/dockiq.db
 
