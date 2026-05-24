@@ -37,7 +37,7 @@ async function upsertChunked(supabase, table, rows) {
 
 export async function computePatterns() {
   const supabase = createClient(
-    process.env.SUPABASE_URL,
+    process.env.SUPABASE_URL.replace(/\/$/, ""),
     process.env.SUPABASE_SERVICE_KEY,
     { realtime: { transport: ws } }
   );
