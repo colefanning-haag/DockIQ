@@ -1,8 +1,6 @@
 import Database from "better-sqlite3";
-import { createClient } from "@supabase/supabase-js";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import ws from "ws";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DB_PATH = process.env.DB_PATH ?? join(__dirname, "dockiq.db");
@@ -26,21 +24,29 @@ function percentile(sorted, p) {
     : sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
 }
 
-async function upsertChunked(supabase, table, rows) {
+async function upsertChunked(supabaseUrl, supabaseKey, table, rows) {
+  const endpoint = `${supabaseUrl}/rest/v1/${table}`;
   for (let i = 0; i < rows.length; i += CHUNK) {
-    const { error } = await supabase
-      .from(table)
-      .upsert(rows.slice(i, i + CHUNK));
-    if (error) throw new Error(`${table} upsert failed: ${error.message}`);
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${supabaseKey}`,
+        "apikey": supabaseKey,
+        "Prefer": "resolution=merge-duplicates",
+      },
+      body: JSON.stringify(rows.slice(i, i + CHUNK)),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`${table} upsert failed: HTTP ${res.status} — ${text}`);
+    }
   }
 }
 
 export async function computePatterns() {
-  const supabase = createClient(
-    process.env.SUPABASE_URL.replace(/\/$/, ""),
-    process.env.SUPABASE_SERVICE_KEY,
-    { realtime: { transport: ws } }
-  );
+  const supabaseUrl = process.env.SUPABASE_URL.replace(/\/$/, "");
+  const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
 
   const db = new Database(DB_PATH, { readonly: true });
 
@@ -154,10 +160,10 @@ export async function computePatterns() {
     }
   }
 
-  await upsertChunked(supabase, "station_empty_patterns", emptyPatterns);
+  await upsertChunked(supabaseUrl, supabaseKey, "station_empty_patterns", emptyPatterns);
   console.log(`[patterns] Wrote ${emptyPatterns.length} empty-pattern rows`);
 
-  await upsertChunked(supabase, "station_hourly_patterns", hourlyPatterns);
+  await upsertChunked(supabaseUrl, supabaseKey, "station_hourly_patterns", hourlyPatterns);
   console.log(`[patterns] Wrote ${hourlyPatterns.length} hourly-pattern rows`);
 }
 
