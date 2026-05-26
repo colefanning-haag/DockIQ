@@ -5,8 +5,9 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DB_PATH = process.env.DB_PATH ?? join(__dirname, "dockiq.db");
 
-const EMPTY_THRESHOLD = 5; // bikes  ≤ this → station running low
-const DOCK_THRESHOLD  = 5; // docks  ≤ this → station nearly full
+const EMPTY_THRESHOLD  = 5; // bikes  ≤ this → station running low
+const EBIKE_THRESHOLD  = 2; // ebikes ≤ this → e-bikes gone
+const DOCK_THRESHOLD   = 5; // docks  ≤ this → station nearly full
 
 const MORNING_START = 6;
 const MORNING_END   = 11;
@@ -81,6 +82,7 @@ function processStation(stationId, name, rows) {
 
   for (const [dow, days] of dows) {
     const mBikeEmpty = [], mDockFull = [], eBikeEmpty = [], eDockFull = [];
+    const mEbikeEmpty = [], eEbikeEmpty = [];
     const hourlyData = {};
     let totalDays = 0;
 
@@ -99,6 +101,12 @@ function processStation(stationId, name, rows) {
       const s4 = evening.find(s => s.num_docks_available <= DOCK_THRESHOLD);
       if (s4) eDockFull.push(s4.minute_of_day);
 
+      const s5 = morning.find(s => s.num_ebikes_available <= EBIKE_THRESHOLD);
+      if (s5) mEbikeEmpty.push(s5.minute_of_day);
+
+      const s6 = evening.find(s => s.num_ebikes_available <= EBIKE_THRESHOLD);
+      if (s6) eEbikeEmpty.push(s6.minute_of_day);
+
       for (const s of [...morning, ...evening]) {
         if (!hourlyData[s.hour]) hourlyData[s.hour] = { bikes: [], ebikes: [], docks: [] };
         hourlyData[s.hour].bikes.push(s.num_bikes_available);
@@ -108,10 +116,12 @@ function processStation(stationId, name, rows) {
     }
 
     commutePatterns.push(
-      makePattern(stationId, name, dow, mBikeEmpty, "morning_bikes_empty", totalDays),
-      makePattern(stationId, name, dow, mDockFull,  "morning_docks_full",  totalDays),
-      makePattern(stationId, name, dow, eBikeEmpty, "evening_bikes_empty", totalDays),
-      makePattern(stationId, name, dow, eDockFull,  "evening_docks_full",  totalDays)
+      makePattern(stationId, name, dow, mBikeEmpty,  "morning_bikes_empty",  totalDays),
+      makePattern(stationId, name, dow, mDockFull,   "morning_docks_full",   totalDays),
+      makePattern(stationId, name, dow, mEbikeEmpty, "morning_ebikes_empty", totalDays),
+      makePattern(stationId, name, dow, eBikeEmpty,  "evening_bikes_empty",  totalDays),
+      makePattern(stationId, name, dow, eDockFull,   "evening_docks_full",   totalDays),
+      makePattern(stationId, name, dow, eEbikeEmpty, "evening_ebikes_empty", totalDays)
     );
 
     for (const [hour, data] of Object.entries(hourlyData)) {
