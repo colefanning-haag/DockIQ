@@ -5,8 +5,8 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DB_PATH = process.env.DB_PATH ?? join(__dirname, "dockiq.db");
 
-const EMPTY_THRESHOLD = 2; // bikes  ≤ this → station empty
-const DOCK_THRESHOLD  = 2; // docks  ≤ this → station full
+const EMPTY_THRESHOLD = 5; // bikes  ≤ this → station running low
+const DOCK_THRESHOLD  = 5; // docks  ≤ this → station nearly full
 
 const MORNING_START = 6;
 const MORNING_END   = 11;
